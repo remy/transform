@@ -39,6 +39,7 @@
       }
 
       button {
+        border-radius: 2px;
         cursor: pointer;
       }
 
@@ -161,13 +162,36 @@
       .error input {
         background: #FFCDD2;
       }
+
+      .copy {
+        border: 0;
+        background: none;
+        text-decoration: underline;
+        font-weight: normal;
+        margin-left: 8px;
+        border-radius: 2px;
+        color: #999;
+      }
+
+      .copy:hover {
+        color: #000;
+      }
+
+      /* I feel utterly ashamed of myself for doing this… */
+      .copy:after {
+        content: 'y';
+      }
+
+      .copy:active:after {
+        content: 'ied';
+      }
     </style>
   </head>
 
   <body>
     <header>
       <p>Transform a glob of text into structured JSON</p>
-      <p>Created by <a href="https://remysharp.com">@rem</a> &bull; <a href="https://remysharp.com/work">Work with
+      <p>Created by <a target="_blank" href="https://remysharp.com">@rem</a> &bull; <a target="_blank" href="https://remysharp.com/work">Work with
           me</a></p>
     </header>
     <div id="app">
@@ -214,6 +238,8 @@
 
       <h2>
         Result
+
+        <button class="copy" v-on:click="navigator.clipboard.writeText(JSON.stringify(result, 0, 2))"><span aria-label="copy">cop</span></button>
       </h2>
       <pre>{{ result }}</pre>
     </div>
