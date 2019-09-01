@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Transform string</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<style id="jsbin-css">
+* {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  box-sizing: border-box;
+  font-size: 18px;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  height: 20vh;
+}
+
+
+li {
+  margin: 4px 0;
+}
+
+.rule > span:first-child {
+  grid-area: 1 / 1 / 2 / 5;
+/*   display: block; */
+/*   float: left; */
+  width: 30%;
+}
+
+.delete {
+/*   float: left; */
+  margin-right: 10px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(1,1,1, 0.1)
+}
+
+#rules ol {
+  overflow: hidden;
+}
+
+.add-rule {
+  margin: 20px 0;
+  display: block;
+  clear: both;
+}
+</style>
+</head>
+<body>
+  <div id="app">
+    <h2>
+      Source
+    </h2>
+  <textarea v-model="source" id="source" placeholder="paste a glob of text here"></textarea>
+
+    <h2>
+      Transform rules
+    </h2>
+
+    <div id="rules">
+      <ol>
+        <li v-for="(rule, index) in rules">
+          <button class="delete" v-on:click="deleteRule(index)">
+            ×
+          </button>
+          <label class="rule">
+            <span>{{ rule.type | labelForRule }}</span>
+            <span v-show="rule.value !== null"><input v-model="rule.value" type="text"> ({{ rule.value | display }})
+            </span>
+            </label>
+      </ol>
+      
+      <div class="add-rule">
+        <label><span>Add rule</span>
+        <select v-model="newRule">
+          <option value="splitter">Splitter</option>
+          <option value="ignore">Ignore match</option>
+          <option value="strip">Strip match</option>
+          <option value="replace">Replacer</option>
+          <option value="map">Map to object</option>
+          <option value="dropEmpty">Drop empty</option>
+        </select>
+          </label>
+        <button v-on:click="rules.push({ type: newRule, value: newRule === 'dropEmpty' ? null : '' })">
+        	Create
+      	</button>
+
+      </div>
+    </div>
+
+    <h2>
+      Result
+    </h2>
+    <pre>{{ result | json }}</pre>
+  </div>
+  
+  <script type="text/x-template" id="splitter">
+  	<li>Split lines by <input v-model="value" type="text"> ({{ value | display }})</li>
+  </script>
+<!--boot js--><script id="jsbin-javascript" defer>console.clear()
+Vue.component('splitter', {
+  template: '#splitter',
+  props: ['value'],
+  filters: {
+    display(s) {
+      return JSON.stringify(s)
+    }
+  },
+  data: {
+    value: '\n'
+  }
+});
+
+function applyRule(result, rule) {
+  return result.reduce((acc, curr) => {
+    if (Array.isArray(curr)) {
+      if (rule.type === 'dropEmpty' && curr.length === 0) {
+       	return acc; 
+      }
+      
+      
+      if (rule.type === 'map') {
+        const fields = rule.value.split(',').map(_ => _.trim());
+        curr = curr.reduce((acc, curr, i) => {
+          acc[fields[i]] = curr;
+          return acc;
+        }, {});
+        acc.push(curr);
+        return acc;
+      }
+
+    	acc.push(applyRule(curr, rule));
+      return acc;
+    }
+    
+    if (typeof curr === 'object') {
+      if (rule.type === 'dropEmpty' && Object.keys(curr).length === 0) {
+       	return acc; 
+      }
+      
+      curr = Object.entries(curr).reduce((acc, [key, value]) => {
+        const res = applyRule([value], rule);
+        if (res.length) {
+        	acc[key] = res[0]
+        }
+        return acc;
+      }, {});
+      acc.push(curr);
+      return acc;
+    }
+    
+    if (rule.type === 'dropEmpty') {
+      if (!curr || (typeof curr === 'string' && !curr.trim())) {
+        return acc;
+      }
+      
+      acc.push(curr);
+      return acc;
+    }
+    
+    if (rule.type === 'splitter') {
+      curr = curr.split(rule.value);
+    }
+    
+    if (rule.type === 'replace') {
+      const parts = rule.value.split('/').slice(1, -1);
+      curr = curr.replace(new RegExp(parts[0], 'g'), parts[1]);
+      acc.push(curr);
+      return acc;
+    }
+    
+    if (rule.type === 'strip') {
+      let value = rule.value;
+      if (value.startsWith('/')) {
+				value = rule.value.slice(1, -1);
+      }
+      
+      curr = curr.replace(new RegExp(value, 'g'), "");
+      acc.push(curr);
+      return acc;
+    }
+
+    if (rule.type === 'ignore' && rule.value) {
+      if (rule.value.startsWith('/')) {
+        let value = rule.value.slice(1, -1);
+        if (new RegExp(value).test(curr)) {
+          return acc;
+        }
+      } else {
+        if (curr.includes(rule.value)) {
+          return acc;
+        }
+      }
+    }
+    
+    acc.push(curr);
+    return acc;
+  }, [])
+}
+
+const app = new Vue({
+  el: '#app',
+  filters: {
+    display(s) {
+      return JSON.stringify(s)
+    },
+    labelForRule(type) {
+      return {
+        splitter: 'Split lines by',
+        ignore: 'Ignore if matches',
+        dropEmpty: 'Drop empty elements',
+        strip: 'Strip matching',
+        map: 'Map array to object',
+        replace: 'Replace /source/with/'
+      }[type]
+    }
+  },
+  data: {
+    source: document.querySelector('#source').value,
+    newRule: 'splitter',
+    rules: [
+      
+    ],
+    // result: [],
+  },
+  computed: {
+    result() {
+      const rules = this.rules;
+      let result = this.source.split('\n');
+			// noprotect
+      for (let i = 0; i < rules.length; i++) {
+        const rule = rules[i];
+        result = applyRule(result, rule);
+      }
+
+			return result;
+	  }
+  },
+  methods: {
+    deleteRule(index) {
+      this.rules.splice(index, 1);
+    }
+  }
+})
+</script>
+</body>
+</html>
