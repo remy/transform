@@ -6,11 +6,18 @@
     <meta name="viewport" content="width=device-width">
     <title>Transform string</title>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+
     <style id="jsbin-css">
       * {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
         box-sizing: border-box;
         font-size: 18px;
+      }
+
+      body {
+        background: #fefefe;
+        margin: 0;
       }
 
       textarea {
@@ -19,20 +26,15 @@
         height: 20vh;
       }
 
-
       li {
         margin: 4px 0;
       }
 
       .rule>span:first-child {
-        grid-area: 1 / 1 / 2 / 5;
-        /*   display: block; */
-        /*   float: left; */
         width: 30%;
       }
 
       .delete {
-        /*   float: left; */
         margin-right: 10px;
       }
 
@@ -53,10 +55,121 @@
         display: block;
         clear: both;
       }
+
+      .rule span:last-child {
+        color: rgb(154, 154, 154);
+        /* background: white; */
+      }
+
+      #app {
+        padding: 20px;
+        padding-top: 0;
+      }
+
+      @media screen and (min-width: 900px) {
+        div#app {
+          display: grid;
+          grid-column-gap: 20px;
+          grid-row-gap: 0px;
+          grid-template-columns: repeat(2, minmax(200px, 1fr));
+        }
+      }
+
+
+      #app> :nth-child(1) {
+        grid-area: 3 / 1 / 4 / 2;
+      }
+
+      #app> :nth-child(2) {
+        grid-area: 4 / 1 / 5 / 2;
+      }
+
+      #app> :nth-child(3) {
+        grid-area: 1 / 1 / 2 / 2;
+      }
+
+      #app> :nth-child(4) {
+        grid-area: 2 / 1 / 3 / 2;
+      }
+
+      #app> :nth-child(5) {
+        grid-row: auto / span 1;
+      }
+
+      #app> :nth-child(6) {
+        grid-row: auto / span 5;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        color: #212121;
+        font-family: 'ubuntu mono', Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New;
+
+      }
+
+      button.delete {
+        background: none;
+        border: 0;
+        margin: 0;
+      }
+
+      button.delete:after {
+        opacity: 0.5;
+        content: '🗑️';
+        color: black;
+        font-size: initial;
+      }
+
+      button.delete {
+        color: transparent;
+        font-size: 0;
+      }
+
+      button.delete:hover:after {
+        opacity: 1;
+      }
+
+      textarea#source {
+        width: 100% !important;
+        padding: 8px;
+        font-size: 100%;
+        opacity: 0.5;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+        background: rgb(158, 158, 158);
+        font-weight: bold;
+        color: #fefefe;
+        margin-bottom: 20px;
+      }
+
+      header a {
+        color: #fff;
+      }
+
+      header p {
+        margin: 0;
+      }
+
+      header p:last-child {
+        margin-left: 20px;
+      }
+
+      .error input {
+        background: #FFCDD2;
+      }
     </style>
   </head>
 
   <body>
+    <header>
+      <p>Transform a glob of text into structured JSON</p>
+      <p>Created by <a href="https://remysharp.com">@rem</a> &bull; <a href="https://remysharp.com/work">Work with
+          me</a></p>
+    </header>
     <div id="app">
       <h2>
         Source
@@ -71,9 +184,9 @@
         <ol>
           <li v-for="(rule, index) in rules">
             <button class="delete" v-on:click="deleteRule(index)">
-              ×
+              delete
             </button>
-            <label class="rule">
+            <label class="rule" v-bind:class="{ error: index === error}">
               <span>{{ rule.type | labelForRule }}</span>
               <span v-show="rule.value !== null"><input v-model="rule.value" type="text"> ({{ rule.value | display }})
               </span>
@@ -88,10 +201,11 @@
               <option value="strip">Strip match</option>
               <option value="replace">Replacer</option>
               <option value="map">Map to object</option>
+              <option value="trim">Trim</option>
               <option value="dropEmpty">Drop empty</option>
             </select>
           </label>
-          <button v-on:click="rules.push({ type: newRule, value: newRule === 'dropEmpty' ? null : '' })">
+          <button v-on:click="rules.push({ type: newRule, value: defaultForRule(newRule) })">
             Create
           </button>
 
@@ -101,27 +215,12 @@
       <h2>
         Result
       </h2>
-      <pre>{{ result | json }}</pre>
+      <pre>{{ result }}</pre>
     </div>
 
-    <script type="text/x-template" id="splitter">
-  	<li>Split lines by <input v-model="value" type="text"> ({{ value | display }})</li>
-  </script>
-    <!--boot js-->
-    <script id="jsbin-javascript" defer>console.clear()
-      Vue.component('splitter', {
-        template: '#splitter',
-        props: ['value'],
-        filters: {
-          display(s) {
-            return JSON.stringify(s)
-          }
-        },
-        data: {
-          value: '\n'
-        }
-      });
 
+    <!--boot js-->
+    <script id="jsbin-javascript" defer>
       function applyRule(result, rule) {
         return result.reduce((acc, curr) => {
           if (Array.isArray(curr)) {
@@ -169,12 +268,18 @@
             return acc;
           }
 
+          if (rule.type === 'trim') {
+            curr = curr.trim();
+          }
+
           if (rule.type === 'splitter') {
             curr = curr.split(rule.value);
           }
 
           if (rule.type === 'replace') {
             const parts = rule.value.split('/').slice(1, -1);
+            if (parts[0] === undefined) parts[0] = '';
+            if (parts[1] === undefined) parts[1] = '';
             curr = curr.replace(new RegExp(parts[0], 'g'), parts[1]);
             acc.push(curr);
             return acc;
@@ -222,6 +327,7 @@
               dropEmpty: 'Drop empty elements',
               strip: 'Strip matching',
               map: 'Map array to object',
+              trim: 'Trim whitespace',
               replace: 'Replace /source/with/'
             }[type]
           }
@@ -229,28 +335,58 @@
         data: {
           source: document.querySelector('#source').value,
           newRule: 'splitter',
-          rules: [
-
-          ],
-          // result: [],
+          rules: [],
+          error: null,
         },
         computed: {
           result() {
+            this.updateURL();
             const rules = this.rules;
             let result = this.source.split('\n');
+            this.error = null;
             // noprotect
-            for (let i = 0; i < rules.length; i++) {
-              const rule = rules[i];
-              result = applyRule(result, rule);
+            let i = 0;
+            try {
+              for (i = 0; i < rules.length; i++) {
+                const rule = rules[i];
+                result = applyRule(result, rule);
+              }
+            } catch (e) {
+              this.error = i;
+              console.log('failed at rule %s', i)
             }
 
             return result
           }
         },
+        beforeMount() {
+          const url = new URL(window.location);
+          this.rules = Array.from(url.searchParams.entries(), (([type, value]) => {
+             return ({ type, value: value === 'null' ? null : value })
+          }));
+        },
         methods: {
+          updateURL() {
+            const p = new URLSearchParams(this.rules.reduce((acc, curr) => {
+              acc.push([curr.type, curr.value]);
+              return acc;
+            }, []))
+
+            history.replaceState({}, '', '?' + p.toString());
+          },
           deleteRule(index) {
             this.rules.splice(index, 1);
-          }
+          },
+          defaultForRule(type) {
+            const res = {
+              splitter: '\t',
+              map: 'prop1, prop2',
+              dropEmpty: null,
+              trim: null,
+              replace: '///'
+            }[type]
+            return res !== undefined ? res : ''
+          },
         }
       })
     </script>
