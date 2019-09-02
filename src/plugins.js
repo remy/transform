@@ -24,7 +24,7 @@ export const splitter = {
   args: ['\t'],
   label: 'Split lines by',
   handler(source, value) {
-    return source.split(value);
+    return walk(source, source => source.split(value));
   }
 };
 
