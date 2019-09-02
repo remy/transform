@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Transform string</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+
+  <body>
+    <header>
+      <p>Transform a glob of text into structured JSON</p>
+      <p>Created by <a target="_blank" href="https://remysharp.com">@rem</a> &bull; <a target="_blank" href="https://remysharp.com/work">Work with
+          me</a></p>
+    </header>
+    <div id="app">
+      <h2>
+        Source
+      </h2>
+      <textarea v-on:change="save('source', $event.target.value)" v-model="source" id="source" placeholder="paste a glob of text here"></textarea>
+
+      <h2>
+        Transform rules
+      </h2>
+
+      <div id="rules">
+        <ol>
+          <li v-for="(rule, index) in rules">
+            <button class="delete" v-on:click="deleteRule(index)">
+              delete
+            </button>
+            <label class="rule" v-bind:class="{ error: index === error}">
+              <span>{{ rule.type | labelForRule }}</span>
+              <span v-show="rule.value !== null"><input v-model="rule.value" type="text"> ({{ rule.value | display }})
+              </span>
+            </label>
+        </ol>
+
+        <div class="add-rule">
+          <label><span>Add rule</span>
+            <select v-model="newRule">
+              <option v-for="plugin in plugins" v-bind:value="plugin.id">{{ plugin.name }}</option>
+            </select>
+          </label>
+          <button v-on:click="rules.push({ type: newRule, value: defaultForRule(newRule) })">
+            Create
+          </button>
+
+        </div>
+      </div>
+
+      <h2>
+        Result
+
+        <button class="copy" v-on:click="navigator.clipboard.writeText(JSON.stringify(result, 0, 2))"><span aria-label="copy">cop</span></button>
+      </h2>
+      <pre>{{ result }}</pre>
+    </div>
+    <footer>
+      <p><a target="_blank" href="https://github.com/remy/transform/issues/new">File an issue</a> &bullet; <a target="_blank" href="https://github.com/remy/transform">Source code</a></p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script type="module" src="index.js"></script>
+    <script nomodule src="bundle.js"></script>
+    <script async defer crossorigin="anonymous" src="https://api.countapi.xyz/hit/transform.isthe.link"></script>
