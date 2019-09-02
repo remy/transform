@@ -7,6 +7,13 @@
 body {
   background: #fefefe;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+html {
+  height: 100%;
 }
 
 li {
@@ -48,6 +55,7 @@ button:hover {
 #app {
   padding: 20px;
   padding-top: 0;
+  flex-grow: 1;
 }
 
 @media screen and (min-width: 900px) {
