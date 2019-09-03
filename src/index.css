@@ -141,7 +141,7 @@ header, footer {
   display: flex;
   justify-content: space-between;
   padding: 20px;
-  background: rgb(158, 158, 158);
+  background: #5D5D5D;
   font-weight: bold;
   color: #fefefe;
   margin-bottom: 20px;
