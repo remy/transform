@@ -1,6 +1,10 @@
-function walk(source, handler) {
+function walk(source, handler, include = []) {
   if (Array.isArray(source)) {
     return source.reduce((acc, curr) => {
+      if (include.includes(Array)) {
+        curr = handler(curr);
+        if (curr === null) return acc;
+      }
       const res = walk(curr, handler);
       if (res !== null) acc.push(res);
       return acc;
@@ -9,6 +13,10 @@ function walk(source, handler) {
 
   if (typeof source === 'object') {
     return Object.keys(source).reduce((acc, curr) => {
+      if (include.includes(Object)) {
+        const res = handler(source[curr]);
+        if (res === null) return acc;
+      }
       const res = walk(source[curr], handler);
       if (res !== null) acc[curr] = res;
       return acc;
@@ -34,19 +42,23 @@ export const ignore = {
   label: 'Ignore if matches',
   args: [''],
   handler(source, value) {
+    if (!value) {
+      return source;
+    }
+
+    let test = s => s.includes(value);
+
+    if (value.startsWith('/')) {
+      value = value.slice(1, -1);
+      const re = new RegExp(value);
+      test = s => re.test(s);
+    }
+
     return walk(source, source => {
-      if (value) {
-        if (value.startsWith('/')) {
-          value = value.slice(1, -1);
-          if (new RegExp(value).test(source)) {
-            return null;
-          }
-        } else {
-          if (source.includes(value)) {
-            return null;
-          }
-        }
+      if (test(source)) {
+        return null;
       }
+
       return source;
     });
   }
@@ -143,7 +155,7 @@ export const dropEmpty = {
       }
 
       return source;
-    });
+    }, [Array, Object]);
   }
 };
 
@@ -154,15 +166,17 @@ export const map = {
   args: ['prop1, prop2'],
   label: 'Map array to object',
   handler(source, value) {
-    if (Array.isArray(source)) {
-      const fields = value.split(',').map(_ => _.trim());
-      return source.reduce((acc, curr, i) => {
-        acc[fields[i]] = curr;
-        return acc;
-      }, {});
-    }
+    const fields = value.split(',').map(_ => _.trim());
+    return walk(source, source => {
+      if (Array.isArray(source)) {
+        return source.reduce((acc, curr, i) => {
+          acc[fields[i]] = curr;
+          return acc;
+        }, {});
+      }
 
-    return { [value]: source };
+      return source;
+    }, [Array]);
   }
 };
 
