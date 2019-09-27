@@ -105,6 +105,8 @@ const app = new Vue({
     const url = new URL(window.location);
     this.rules = Array.from(url.searchParams.entries(), ([type, value]) => {
       return { type, value: value === 'null' ? null : value };
+    }).filter(rule => {
+      return !!plugins[rule.type];
     });
 
     this.source = sessionStorage.getItem('source') || '';
