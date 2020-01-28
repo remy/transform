@@ -64,6 +64,34 @@ export const ignore = {
   }
 };
 
+export const match = {
+  id: 'match',
+  name: 'Match',
+  label: 'Include if matches',
+  args: [''],
+  handler(source, value) {
+    if (!value) {
+      return null;
+    }
+
+    let test = s => s.includes(value);
+
+    if (value.startsWith('/')) {
+      value = value.slice(1, -1);
+      const re = new RegExp(value);
+      test = s => re.test(s);
+    }
+
+    return walk(source, source => {
+      if (test(source)) {
+        return source;
+      }
+
+      return null;
+    });
+  }
+};
+
 export const strip = {
   id: 'strip',
   name: 'Strip match',
@@ -125,6 +153,44 @@ export const merge = {
   }
 };
 
+export const extract = {
+  id: 'extract',
+  name: 'Extract',
+  args: [0],
+  label: 'Extract nth item',
+  takes: [Array],
+  handler(source, value) {
+    return source[value];
+  }
+};
+
+export const join = {
+  id: 'join',
+  name: 'Join to string',
+  label: 'Join into string using',
+  args: ['\n'],
+  takes: [Array],
+  handler(source, value) {
+    return source.join(value);
+  }
+};
+
+export const slice = {
+  id: 'slice',
+  name: 'Slice',
+  label: 'Slice array [n:m]',
+  args: ['1:'],
+  takes: [Array],
+  handler(source, value) {
+    const [a, b] = value
+      .split(':')
+      .map(_ => parseInt(_, 10))
+      .map(_ => (isNaN(_) ? undefined : _));
+
+    return source.slice(a, b);
+  }
+};
+
 export const dropEmpty = {
   id: 'dropEmpty',
   name: 'Drop empty',
@@ -132,30 +198,34 @@ export const dropEmpty = {
   args: null,
   label: 'Drop empty elements',
   handler(source) {
-    return walk(source, source => {
-      if (Array.isArray(source)) {
-        const content = source.filter(Boolean);
+    return walk(
+      source,
+      source => {
+        if (Array.isArray(source)) {
+          const content = source.filter(Boolean);
 
-        if (content.length === 0) {
+          if (content.length === 0) {
+            return null;
+          }
+
+          return source;
+        }
+
+        if (typeof source === 'object') {
+          if (Object.keys(source).length === 0) {
+            return null;
+          }
+          return source;
+        }
+
+        if (!source || (typeof source === 'string' && !source.trim())) {
           return null;
         }
 
         return source;
-      }
-
-      if (typeof source === 'object') {
-        if (Object.keys(source).length === 0) {
-          return null;
-        }
-        return source;
-      }
-
-      if (!source || (typeof source === 'string' && !source.trim())) {
-        return null;
-      }
-
-      return source;
-    }, [Array, Object]);
+      },
+      [Array, Object]
+    );
   }
 };
 
@@ -167,16 +237,20 @@ export const map = {
   label: 'Map array to object',
   handler(source, value) {
     const fields = value.split(',').map(_ => _.trim());
-    return walk(source, source => {
-      if (Array.isArray(source)) {
-        return source.reduce((acc, curr, i) => {
-          acc[fields[i]] = curr;
-          return acc;
-        }, {});
-      }
+    return walk(
+      source,
+      source => {
+        if (Array.isArray(source)) {
+          return source.reduce((acc, curr, i) => {
+            acc[fields[i]] = curr;
+            return acc;
+          }, {});
+        }
 
-      return source;
-    }, [Array]);
+        return source;
+      },
+      [Array]
+    );
   }
 };
 
