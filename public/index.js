@@ -60,6 +60,9 @@ new Vue({
     this.source = sessionStorage.getItem('source') || '';
   },
   methods: {
+    showPreview(type) {
+      return plugins[type].preview !== false;
+    },
     save(key, value) {
       sessionStorage.setItem(key, value);
     },

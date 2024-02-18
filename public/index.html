@@ -34,7 +34,8 @@
             </button>
             <label class="rule" v-bind:class="{ error: index === error}">
               <span>{{ rule.type | labelForRule }}</span>
-              <span v-show="rule.value !== null"><input v-model="rule.value" type="text"> ({{ rule.value | display }})
+              <span v-show="rule.value !== null"><input v-model="rule.value" type="text">
+                <span v-show="showPreview(rule.type)">({{ rule.value | display }})</span>
               </span>
             </label>
         </ol>

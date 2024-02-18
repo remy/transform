@@ -5,7 +5,7 @@ function walk(source, handler, include = []) {
         curr = handler(curr);
         if (curr === null) return acc;
       }
-      const res = walk(curr, handler);
+      const res = walk(curr, handler, include);
       if (res !== null) acc.push(res);
       return acc;
     }, []);
@@ -17,7 +17,7 @@ function walk(source, handler, include = []) {
         const res = handler(source[curr]);
         if (res === null) return acc;
       }
-      const res = walk(source[curr], handler);
+      const res = walk(source[curr], handler, include);
       if (res !== null) acc[curr] = res;
       return acc;
     }, {});
@@ -95,7 +95,7 @@ export const match = {
 export const pick = {
   id: 'pick',
   name: 'Pick each',
-  label: 'Pick item from each element',
+  label: 'Pick nth item from element',
   args: [''],
   handler(source, value) {
     if (value.trim() === '') {
@@ -265,6 +265,19 @@ export const map = {
       },
       [Array]
     );
+  },
+};
+
+export const mapStr = {
+  id: 'mapStr',
+  takes: [Array],
+  name: 'Map string',
+  args: ['length: ${_.length}'],
+  preview: false,
+  label: 'Map to string',
+  handler(source, value) {
+    const fn = new Function('_', `return \`${value}\`;`);
+    return walk(source, fn);
   },
 };
 
