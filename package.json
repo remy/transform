@@ -4,16 +4,12 @@
   },
   "scripts": {
     "start": "serve src",
-    "build": "webpack",
-    "deploy": "npm run build && now && now alias",
     "test": "tap --node-arg=-r --node-arg=esm --no-coverage-report --watch --no-color --reporter=spec __tests__/*.test.js"
   },
-  "devDependencies": {
-    "copy-webpack-plugin": "^5.0.4",
-    "esm": "^3.2.25",
-    "tap": "^14.5.0",
-    "webpack": "^4.37.0",
-    "webpack-cli": "^3.3.6"
-  },
-  "dependencies": {}
+  "name": "transform",
+  "description": "Suspect this only helps me, but I wanted a webgui for transforming globs of text into JSON that I could feed into software.",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "Remy Sharp",
+  "license": "MIT"
 }
