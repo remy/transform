@@ -11,14 +11,16 @@
   <body>
     <header>
       <p>Transform a glob of text into structured JSON</p>
-      <p>Created by <a target="_blank" href="https://remysharp.com">@rem</a> &bull; <a target="_blank" href="https://remysharp.com/work">Work with
+      <p>Created by <a target="_blank" href="https://remysharp.com">@rem</a> &bull; <a target="_blank"
+          href="https://remysharp.com/work">Work with
           me</a></p>
     </header>
     <div id="app">
       <h2>
         Source
       </h2>
-      <textarea v-on:change="save('source', $event.target.value)" v-model="source" id="source" placeholder="paste a glob of text here"></textarea>
+      <textarea v-on:change="save('source', $event.target.value)" v-model="source" id="source"
+        placeholder="paste a glob of text here"></textarea>
 
       <h2>
         Transform rules
@@ -53,14 +55,16 @@
       <h2>
         Result
 
-        <button class="copy" v-on:click="navigator.clipboard.writeText(JSON.stringify(result, 0, 2))"><span aria-label="copy">cop</span></button>
+        <button class="copy" v-on:click="copy(JSON.stringify(result, 0, 2))"><span aria-label="copy">cop</span></button>
       </h2>
       <pre>{{ result }}</pre>
     </div>
     <footer>
-      <p><a target="_blank" href="https://github.com/remy/transform/issues/new">File an issue</a> &bullet; <a target="_blank" href="https://github.com/remy/transform">Source code</a></p>
+      <p><a target="_blank" href="https://github.com/remy/transform/issues/new">File an issue</a> &bullet; <a
+          target="_blank" href="https://github.com/remy/transform">Source code</a></p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://unpkg.com/vue@2"></script>
     <script type="module" src="index.js"></script>
     <script nomodule src="bundle.js"></script>
-    <script async defer crossorigin="anonymous" src="https://api.countapi.xyz/hit/transform.isthe.link?callback=cb"></script>
+    <script async defer crossorigin="anonymous"
+      src="https://api.countapi.xyz/hit/transform.isthe.link?callback=cb"></script>

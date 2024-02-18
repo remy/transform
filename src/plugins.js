@@ -32,8 +32,8 @@ export const splitter = {
   args: ['\t'],
   label: 'Split lines by',
   handler(source, value) {
-    return walk(source, source => source.split(value));
-  }
+    return walk(source, (source) => source.split(value));
+  },
 };
 
 export const ignore = {
@@ -46,22 +46,22 @@ export const ignore = {
       return source;
     }
 
-    let test = s => s.includes(value);
+    let test = (s) => s.includes(value);
 
     if (value.startsWith('/')) {
       value = value.slice(1, -1);
       const re = new RegExp(value);
-      test = s => re.test(s);
+      test = (s) => re.test(s);
     }
 
-    return walk(source, source => {
+    return walk(source, (source) => {
       if (test(source)) {
         return null;
       }
 
       return source;
     });
-  }
+  },
 };
 
 export const match = {
@@ -74,22 +74,36 @@ export const match = {
       return null;
     }
 
-    let test = s => s.includes(value);
+    let test = (s) => s.includes(value);
 
     if (value.startsWith('/')) {
       value = value.slice(1, -1);
       const re = new RegExp(value);
-      test = s => re.test(s);
+      test = (s) => re.test(s);
     }
 
-    return walk(source, source => {
+    return walk(source, (source) => {
       if (test(source)) {
         return source;
       }
 
       return null;
     });
-  }
+  },
+};
+
+export const pick = {
+  id: 'pick',
+  name: 'Pick each',
+  label: 'Pick item from each element',
+  args: [''],
+  handler(source, value) {
+    if (value.trim() === '') {
+      return null;
+    }
+
+    return source.map((s) => s[value]);
+  },
 };
 
 export const strip = {
@@ -98,14 +112,14 @@ export const strip = {
   label: 'Strip matching',
   args: [''],
   handler(source, value) {
-    return walk(source, source => {
+    return walk(source, (source) => {
       if (value.startsWith('/')) {
         value = value.slice(1, -1);
       }
 
       return source.replace(new RegExp(value, 'g'), '');
     });
-  }
+  },
 };
 
 export const replace = {
@@ -118,10 +132,10 @@ export const replace = {
     if (parts[0] === undefined) parts[0] = '';
     if (parts[1] === undefined) parts[1] = '';
 
-    return walk(source, value =>
+    return walk(source, (value) =>
       value.replace(new RegExp(parts[0], 'g'), parts[1])
     );
-  }
+  },
 };
 
 export const merge = {
@@ -150,7 +164,7 @@ export const merge = {
     }
 
     return res;
-  }
+  },
 };
 
 export const extract = {
@@ -161,7 +175,7 @@ export const extract = {
   takes: [Array],
   handler(source, value) {
     return source[value];
-  }
+  },
 };
 
 export const join = {
@@ -172,7 +186,7 @@ export const join = {
   takes: [Array],
   handler(source, value) {
     return source.join(value);
-  }
+  },
 };
 
 export const slice = {
@@ -184,11 +198,11 @@ export const slice = {
   handler(source, value) {
     const [a, b] = value
       .split(':')
-      .map(_ => parseInt(_, 10))
-      .map(_ => (isNaN(_) ? undefined : _));
+      .map((_) => parseInt(_, 10))
+      .map((_) => (isNaN(_) ? undefined : _));
 
     return source.slice(a, b);
-  }
+  },
 };
 
 export const dropEmpty = {
@@ -200,7 +214,7 @@ export const dropEmpty = {
   handler(source) {
     return walk(
       source,
-      source => {
+      (source) => {
         if (Array.isArray(source)) {
           const content = source.filter(Boolean);
 
@@ -226,7 +240,7 @@ export const dropEmpty = {
       },
       [Array, Object]
     );
-  }
+  },
 };
 
 export const map = {
@@ -236,10 +250,10 @@ export const map = {
   args: ['prop1, prop2'],
   label: 'Map array to object',
   handler(source, value) {
-    const fields = value.split(',').map(_ => _.trim());
+    const fields = value.split(',').map((_) => _.trim());
     return walk(
       source,
-      source => {
+      (source) => {
         if (Array.isArray(source)) {
           return source.reduce((acc, curr, i) => {
             acc[fields[i]] = curr;
@@ -251,7 +265,7 @@ export const map = {
       },
       [Array]
     );
-  }
+  },
 };
 
 export const trim = {
@@ -260,6 +274,6 @@ export const trim = {
   args: null,
   label: 'Trim whitespace',
   handler(source) {
-    return walk(source, s => s.trim());
-  }
+    return walk(source, (s) => s.trim());
+  },
 };

@@ -1,67 +1,15 @@
+/* global Vue */
 import * as plugins from './plugins.js';
+
+Vue.prototype.navigator = window.navigator;
 
 function applyRule(result, rule) {
   const plugin = plugins[rule.type];
 
   return plugin.handler(result, rule.value);
-
-  if (plugin.takes && plugin.takes.includes(Array)) {
-    result = plugin.handler(result, rule.value);
-    if (result === null) {
-      return null;
-    }
-  }
-
-  return result.reduce((acc, curr) => {
-    const isArray = Array.isArray(curr);
-    const isObject = !isArray && typeof curr === 'object';
-    const isElse = !isArray && !isObject;
-
-    if (isArray) {
-      //       if (plugin.takes && plugin.takes.includes(Array)) {
-      //         const res = plugin.handler(curr, rule.value);
-      //         if (res !== null) {
-      //           acc.push(res);
-      //         }
-      //         return acc;
-      //       }
-
-      const res = applyRule(curr, rule);
-      if (res !== null) {
-        acc.push(res);
-      }
-      return acc;
-    }
-
-    if (isObject) {
-      curr = Object.entries(curr).reduce((acc, [key, value]) => {
-        const res = applyRule([value], rule);
-        if (res.length) {
-          acc[key] = res[0];
-        }
-        return acc;
-      }, {});
-
-      if (plugin.takes && plugin.takes.includes(Object)) {
-        const res = plugin.handler(curr, rule.value);
-        if (res === null) {
-          return acc;
-        }
-      }
-
-      acc.push(curr);
-      return acc;
-    }
-
-    const res = plugin.handler(curr, rule.value);
-    if (res !== null) {
-      acc.push(res);
-    }
-    return acc;
-  }, []);
 }
 
-const app = new Vue({
+new Vue({
   el: '#app',
   filters: {
     display(s) {
@@ -69,14 +17,14 @@ const app = new Vue({
     },
     labelForRule(type) {
       return plugins[type].label;
-    }
+    },
   },
   data: {
     plugins,
     source: document.querySelector('#source').value,
     newRule: Object.keys(plugins)[0],
     rules: [],
-    error: null
+    error: null,
   },
   computed: {
     result() {
@@ -99,13 +47,13 @@ const app = new Vue({
       }
 
       return result;
-    }
+    },
   },
   beforeMount() {
     const url = new URL(window.location);
     this.rules = Array.from(url.searchParams.entries(), ([type, value]) => {
       return { type, value: value === 'null' ? null : value };
-    }).filter(rule => {
+    }).filter((rule) => {
       return !!plugins[rule.type];
     });
 
@@ -114,6 +62,9 @@ const app = new Vue({
   methods: {
     save(key, value) {
       sessionStorage.setItem(key, value);
+    },
+    copy(value) {
+      this.navigator.clipboard.writeText(value);
     },
     updateURL() {
       const p = new URLSearchParams(
@@ -132,6 +83,6 @@ const app = new Vue({
       const defaults = plugins[type].args;
       if (!defaults) return null;
       return defaults[0];
-    }
-  }
+    },
+  },
 });
